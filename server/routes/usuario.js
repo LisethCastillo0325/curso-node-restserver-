@@ -27,10 +27,10 @@ app.get('/usuario', function (req, res) {
                 });
             }
 
-            Usuario.count(where)
+            Usuario.countDocuments(where)
                 .exec( (err, count) => {
                     res.json({
-                        of: true,
+                        ok: true,
                         usuarios,
                         rows: count
                     });
