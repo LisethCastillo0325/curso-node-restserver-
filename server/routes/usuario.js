@@ -3,10 +3,11 @@ const bcrypt = require('bcrypt');
 const _ = require('underscore');
 
 const Usuario = require('../models/usuario');
+const { verificarToken, verificarRoleAdmin } = require('../middlewares/autenticacion');
 
 const app = express();
 
-app.get('/usuario', function (req, res) {
+app.get('/usuario', verificarToken, function (req, res) {
 
     let desde  = req.query.desde || 0;
     let limite = req.query.limite || 5;
@@ -21,9 +22,9 @@ app.get('/usuario', function (req, res) {
         .limit(limite)
         .exec( (err, usuarios) => {
             if(err){
-                return res.status(400).json({
+                return res.status(500).json({
                     ok: false,
-                    err
+                    error: err
                 });
             }
 
@@ -31,7 +32,7 @@ app.get('/usuario', function (req, res) {
                 .exec( (err, count) => {
                     res.json({
                         ok: true,
-                        usuarios,
+                        data: usuarios,
                         rows: count
                     });
                 });
@@ -39,7 +40,7 @@ app.get('/usuario', function (req, res) {
 
 });
 
-app.post('/usuario', function (req, res) {
+app.post('/usuario', [verificarToken, verificarRoleAdmin], function (req, res) {
 
     let body = req.body;
 
@@ -54,7 +55,7 @@ app.post('/usuario', function (req, res) {
         if(err){
             return res.status(400).json({
                 ok: false,
-                err
+                error: err
             });
         }
        
@@ -66,11 +67,11 @@ app.post('/usuario', function (req, res) {
 
 });
 
-app.put('/usuario/:id', function (req, res) {
+app.put('/usuario/:id', [verificarToken, verificarRoleAdmin], function (req, res) {
 
     let id = req.params.id;
 
-    let body = _.pick(req.body, ['nombre', 'email', 'img', 'rele', 'estado']) ;
+    let body = _.pick(req.body, ['nombre', 'email', 'img', 'role', 'estado']) ;
 
     Usuario.findByIdAndUpdate( id, body, { new: true, runValidators: true }, (err, usuarioDB) => {
 
@@ -83,7 +84,7 @@ app.put('/usuario/:id', function (req, res) {
 
         res.json({
             ok: true,
-            usuario: usuarioDB
+            data: usuarioDB
         });
 
 
@@ -91,7 +92,7 @@ app.put('/usuario/:id', function (req, res) {
 
 });
 
-app.delete('/usuario/:id', function (req, res) {
+app.delete('/usuario/:id', [verificarToken, verificarRoleAdmin], function (req, res) {
     
     let id = req.params.id;
 
@@ -103,22 +104,20 @@ app.delete('/usuario/:id', function (req, res) {
         if(err){
             return res.status(400).json({
                 ok: false,
-                err
+                error: err
             });
         }
 
         if(!usuarioBorrado){
             return res.status(400).json({
                 ok: false,
-                err: {
-                    messge: 'Usuario no encontrado'
-                }
+                messge: 'Usuario no encontrado'
             });
         }
 
         res.json({
             ok: true,
-            usuario: usuarioBorrado
+            data: usuarioBorrado
         });
     });
 
