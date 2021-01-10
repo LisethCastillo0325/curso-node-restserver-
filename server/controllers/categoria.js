@@ -4,7 +4,9 @@ const _ = require('underscore');
 
 async function getAllCategories(req, res) {
     try {
-        let categorias = await Categoria.find().exec();
+        let categorias = await Categoria.find()
+            .populate('usuario', 'nombre email')
+            .exec();
         sendResponse(res, true, {categorias});
     } catch (error) {
         sendErrorResponse(res, 500, error);
@@ -31,8 +33,8 @@ async function createCategory(req, res){
             nombre: body.nombre,
             usuario: req.usuario._id
         });
-        let categoriaDB = await categoria.save();
-        sendResponse(res, true, { categoria: categoriaDB });
+        await categoria.save();
+        sendResponse(res, true, { categoria }, 'Se creó la categoría correctamente');
     } catch (error) {
         sendErrorResponse(res, 500, error);
     }
@@ -48,14 +50,12 @@ async function updateCategory(req, res){
             runValidators: true, 
             context: 'query'
         };
-        let categoriaDB = await Categoria.findByIdAndUpdate(id, body, options).exec();
-        if(!categoriaDB){
+        let categoria = await Categoria.findByIdAndUpdate(id, body, options).exec();
+        if(!categoria){
             sendErrorResponse(res, 400, null, 'El id no existe');
         }
         
-        sendResponse(res, true, {
-            categoria: categoriaDB
-        });
+        sendResponse(res, true, {categoria}, 'Se actualizó la categoría correctamente');
 
     } catch (error) {
         sendErrorResponse(res, 500, error);
@@ -65,11 +65,11 @@ async function updateCategory(req, res){
 async function deleteCategory(req, res){
     let id = req.params.id;
     try {
-        let categoriaDB = await Categoria.findByIdAndRemove(id, {new: true, runValidators: true}).exec();
-        if(!categoriaDB){
+        let categoria = await Categoria.findByIdAndRemove(id, {new: true, runValidators: true}).exec();
+        if(!categoria){
             sendErrorResponse(res, 400, null, 'El id no existe');
         }
-        sendResponse(res, true, {categoria: categoriaDB});
+        sendResponse(res, true, {categoria}, 'Se eliminó la categoría correctamente');
     } catch (error) {
         sendErrorResponse(res, 500, error);
     }

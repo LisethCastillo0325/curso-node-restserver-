@@ -4,18 +4,18 @@ function sendResponse(res, ok, data, message='', status=200) {
         message,
         data,
         status,
-        erros: null
+        error: null
     }
     res.status(status).json(result);
 }
 
-function sendErrorResponse(res, status, erros, message='', data=null) {
+function sendErrorResponse(res, status, error, message='', data=null) {
     const result  = {
         ok: false,
         message,
         data,
         status,
-        erros
+        error
     }
     res.status(status).json(result);
 }
