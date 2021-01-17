@@ -12,9 +12,10 @@ let verificarToken = ( req, res, next ) => {
     jwt.verify( token, process.env.SEED, ( err, decode ) => {
         if ( err ) {
             sendErrorResponse(res, 401, err, 'Usuario no autenticado. Token no valido');
+        }else{
+            req.usuario = decode.usuario;
+            next();
         }
-        req.usuario = decode.usuario;
-        next();
     });
 
 }

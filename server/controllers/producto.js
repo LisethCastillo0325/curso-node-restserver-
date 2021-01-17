@@ -46,6 +46,26 @@ getProductByID = async (req, res) => {
     }
 }
 
+searchProduct = async(req, res) => {
+
+    let termino = req.params.termino;
+    let regex = new RegExp(termino, 'i');
+
+    try{
+
+        let productos = await Producto.find({nombre: regex})
+            .populate('categoria')
+            .populate('usuario', 'nombre email')
+            .exec();
+
+        sendResponse(res, true, {productos});
+
+    }catch(error){
+        sendErrorResponse(res, 500, error, 'Error al buscar los productos');
+    }
+
+}
+
 createProduct = async (req, res) => {
     
     let body = req.body;
@@ -114,6 +134,7 @@ deleteProducto = async (req, res) => {
 module.exports = {
     getAllProducts,
     getProductByID,
+    searchProduct,
     createProduct,
     updateProduct,
     deleteProducto
