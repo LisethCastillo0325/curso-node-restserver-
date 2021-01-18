@@ -10,6 +10,13 @@ const ArchivoSchema = new Schema({
         type: String,
         required: [true, 'La url es requerida']
     },
+    path: {
+        type: String,
+        required: [true, 'Se debe proporcionar el PATH del archivo']
+    },
+    nombre: {
+        type: String
+    },
     documentoID: {
         type: Schema.Types.ObjectId
     }

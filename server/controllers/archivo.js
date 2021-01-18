@@ -1,11 +1,11 @@
 const fs = require('fs');
-const path = require('path');
 
+const { getPath, getPathDefault, validateType, validateExtension, deleteFile, generateFileName } = require('../utils/file');
 const { sendResponse, sendErrorResponse } = require('../classes/Response');
 const Usuario = require('../models/usuario');
 const Producto = require('../models/producto');
 const Archivo = require('../models/archivo');
-const { getHeapSnapshot } = require('v8');
+
 
 fileUploadToServer = async (req, res) => {
 
@@ -30,12 +30,29 @@ fileUploadToServer = async (req, res) => {
         sendResponse(res, true, null, `El archivo ${archivo.name} se cargó correctamente`);
 
     } catch (error) {
-        console.log(error);
         try {
             deleteFile(nombreArchivo, tipo);
         } catch (error) {
             sendErrorResponse(res, 500, error, error.message);
+        }finally{
+            sendErrorResponse(res, 500, error, error.message);
         }
+    }
+}
+
+getFile =  (req, res) => {
+    let type = req.params.tipo;
+    let fileName = req.params.nombre;
+    try {  
+        let pathFile = getPath(type, fileName);
+        if(fs.existsSync(pathFile)){
+            res.sendFile(pathFile);
+        }else{
+            let noFilePath = getPathDefault();
+            res.sendFile(noFilePath);
+        }
+
+    } catch (error) {
         sendErrorResponse(res, 500, error, error.message);
     }
 }
@@ -55,53 +72,15 @@ persistFile = async (type, id, fileName) => {
         let archivo = new Archivo({
             tipo: type,
             url: `uploads/${type}/${fileName}`,
+            path: getPath(type, fileName),
+            nombre: fileName,
             documentoID: id
         });
         await archivo.save();
     }
 }
 
-deleteFile = (fileName, type) => {
-    let pathFile = getPath(type, fileName);
-    if(fs.existsSync(pathFile)){
-        fs.unlinkSync(pathFile);
-    }else{
-        console.log('no existe: ', pathFile);
-    }
-}
-
-validateExtension = (file) => {
-    let extension = getFileExtension(file);
-    let extensionesValidas = ['jpg', 'png', 'jpeg', 'gif'];
-    if(extensionesValidas.indexOf(extension) < 0){
-        throw new Error(`La extensión ${extension} no es válida. Extensiones permitidas ${extensionesValidas.join(', ')}`);
-    }
-}
-
-validateType = (tipo) => {
-    let tiposValidos = ['usuario','producto'];
-    if(tiposValidos.indexOf(tipo) < 0){
-        throw new Error(`Los tipos validos son ${tiposValidos.join(', ')} `);
-    }
-}
-
-getPath = (type, fileName) => {
-    let pathFile = path.resolve(__dirname, `../../uploads/${type}/${fileName}`);
-    console.log(pathFile);
-    return pathFile;
-}
-
-getFileExtension = (file) => {
-    let arrArchivo = file.name.split('.');
-    return arrArchivo[arrArchivo.length -1];
-}
-
-generateFileName = (id, file) => {
-    let extension = getFileExtension(file);
-    let nombreArchivo = `${id}-${new Date().getMilliseconds()}.${extension}`;
-    return nombreArchivo;
-}
-
 module.exports = {
-    fileUploadToServer
+    fileUploadToServer,
+    getFile
 }
